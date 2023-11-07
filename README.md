@@ -24,3 +24,16 @@ multipass exec nix-airgapped-vm -- sudo cat /var/log/cloud-init-output.log
 multipass transfer --recursive ./dependencies nix-airgapped-vm:.
 cat install-nix.sh | multipass exec nix-airgapped-vm -- bash -
 ```
+
+### enable-ssh
+
+```sh
+cat enable-ssh.sh | multipass exec nix-airgapped-vm -- bash -
+```
+
+### ssh
+
+```sh
+export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
+ssh ubuntu@$NIX_AIRGAPPED_VM_IP
+```
