@@ -37,3 +37,11 @@ cat enable-ssh.sh | multipass exec nix-airgapped-vm -- bash -
 export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
 ssh ubuntu@$NIX_AIRGAPPED_VM_IP
 ```
+
+### nix-copy-sl
+
+```sh
+export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
+nix copy --to ssh-ng://ubuntu@$NIX_AIRGAPPED_VM_IP "nixpkgs#sl"
+nix path-info nixpkgs#sl
+```

@@ -11,4 +11,4 @@ echo 'export NIX_CONF_DIR=/nix' >> ~/.bash_profile
 
 # Untar the installer and run it.
 tar -xf ./dependencies/nix-2.16.1-x86_64-linux.tar.xz
-nix-2.16.1-x86_64-linux/install --no-daemon
+nix-2.16.1-x86_64-linux/install --daemon --yes --no-channel-add
