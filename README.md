@@ -83,3 +83,9 @@ export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -
 export NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION=`nix path-info --derivation ".#devShells.x86_64-linux.default"`
 ssh ubuntu@$NIX_AIRGAPPED_VM_IP "nix develop --offline $NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION"
 ```
+
+### nix-example-go-project-copy-source
+
+```
+multipass transfer --recursive ./example-go-project nix-airgapped-vm:.
+```
