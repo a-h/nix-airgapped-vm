@@ -37,10 +37,13 @@
           # Use vendored dependencies for this build.
           vendorSha256 = null;
         };
+      });
 
-        devShell = pkgs.mkShell {
+      devShells = forAllSystems ({ system, pkgs }: {
+        default = pkgs.mkShell {
           packages = with pkgs;
             [
+              hello
               go_1_21
               gotools
               xc.packages.${system}.xc
