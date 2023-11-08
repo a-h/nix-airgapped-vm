@@ -40,10 +40,20 @@ export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -
 ssh ubuntu@$NIX_AIRGAPPED_VM_IP
 ```
 
-### nix-copy-sl
+### nix-copy-hello
 
 ```sh
 export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
-nix copy --to ssh-ng://ubuntu@$NIX_AIRGAPPED_VM_IP "nixpkgs#sl"
-nix path-info nixpkgs#sl
+nix copy --to ssh-ng://ubuntu@$NIX_AIRGAPPED_VM_IP "nixpkgs#hello"
+nix path-info nixpkgs#hello
+```
+
+### nix-run-hello-shell
+
+This command starts a shell in the VM with `hello` installed.
+
+```
+export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
+export NIX_AIRGAPPED_VM_HELLO_LOCATION=`nix path-info nixpkgs#hello`
+ssh ubuntu@$NIX_AIRGAPPED_VM_IP "nix shell $NIX_AIRGAPPED_VM_HELLO_LOCATION"
 ```
