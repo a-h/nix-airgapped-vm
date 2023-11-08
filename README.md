@@ -20,6 +20,8 @@ multipass exec nix-airgapped-vm -- sudo cat /var/log/cloud-init-output.log
 
 ### install-nix
 
+The installer comes from https://github.com/DeterminateSystems/nix-installer/releases
+
 ```sh
 multipass transfer --recursive ./dependencies nix-airgapped-vm:.
 cat install-nix.sh | multipass exec nix-airgapped-vm -- bash -
