@@ -68,8 +68,8 @@ Dir: ./example-go-project
 
 ```
 export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
-nix copy --to ssh-ng://ubuntu@$NIX_AIRGAPPED_VM_IP ".#devShells.x86_64-linux.default"
-nix path-info ".#devShells.x86_64-linux.default"
+nix copy --derivation --to ssh-ng://ubuntu@$NIX_AIRGAPPED_VM_IP ".#devShells.x86_64-linux.default"
+nix path-info --derivation ".#devShells.x86_64-linux.default"
 ```
 
 ### nix-run-example-go-project-shell
@@ -80,6 +80,6 @@ Dir: ./example-go-project
 
 ```
 export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
-export NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION=`nix path-info ".#devShells.x86_64-linux.default"`
-ssh ubuntu@$NIX_AIRGAPPED_VM_IP "nix shell $NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION"
+export NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION=`nix path-info --derivation ".#devShells.x86_64-linux.default"`
+ssh ubuntu@$NIX_AIRGAPPED_VM_IP "nix develop --offline $NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION"
 ```
