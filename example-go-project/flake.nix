@@ -58,8 +58,8 @@
         copyToRoot = [
           # Uncomment the coreutils and bash if you want to be able to use a shell environment
           # inside the container.
-          pkgs.coreutils
-          pkgs.bash
+          # pkgs.coreutils
+          # pkgs.bash
           (dockerUser pkgs)
           (app pkgs)
         ];

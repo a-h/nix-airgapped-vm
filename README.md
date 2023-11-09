@@ -128,3 +128,19 @@ Run the Docker image created by `nix-build-docker-tools`.
 ```sh
 docker run --rm -it example-go-project:tools-latest
 ```
+
+### sbom
+
+Dir: example-go-project
+
+```
+nix run github:tiiuae/sbomnix#sbomnix -- --type both `nix path-info .`
+```
+
+### sbom-graph
+
+Dir: example-go-project
+
+```
+nix run github:tiiuae/sbomnix#nixgraph -- --buildtime --depth=1 `nix path-info .#dockerImageApp`
+```
