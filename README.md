@@ -90,3 +90,41 @@ ssh ubuntu@$NIX_AIRGAPPED_VM_IP "nix develop --offline $NIX_AIRGAPPED_VM_EXAMPLE
 ```
 multipass transfer --recursive ./example-go-project nix-airgapped-vm:.
 ```
+
+### nix-build-docker-app
+
+Build the Docker app image using Nix and import it to the local Docker daemon.
+
+Dir: example-go-project
+
+```sh
+nix build .#dockerImageApp
+docker load < result
+```
+
+### nix-build-docker-tools
+
+Build the Docker tools image using Nix and import it to the local Docker daemon.
+
+Dir: example-go-project
+
+```sh
+nix build .#dockerImageTools
+docker load < result
+```
+
+### docker-run-app
+
+Run the Docker image created by `nix-build-docker-app`.
+
+```sh
+docker run --rm -it example-go-project:latest
+```
+
+### docker-run-tools
+
+Run the Docker image created by `nix-build-docker-tools`.
+
+```sh
+docker run --rm -it example-go-project:tools-latest
+```
