@@ -1,19 +1,20 @@
 {
   description = "example-go-project";
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";
-    gitignore = {
-      url = "github:hercules-ci/gitignore.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+  inputs =
+    {
+      nixpkgs.url = "github:NixOS/nixpkgs?ref=nixos-unstable";
+      xc = {
+        url = "github:joerdav/xc";
+        inputs.nixpkgs.follows = "nixpkgs";
+      };
+      gomod2nix = {
+        url = "github:nix-community/gomod2nix";
+        inputs.nixpkgs.follows = "nixpkgs";
+      };
     };
-    xc = {
-      url = "github:joerdav/xc";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-  };
 
-  outputs = { self, nixpkgs, gitignore, xc }:
+  outputs = { self, nixpkgs, xc, gomod2nix }:
     let
       allSystems = [
         "x86_64-linux" # 64-bit Intel/AMD Linux
@@ -36,11 +37,11 @@
       ];
 
       # App to build.
-      app = pkgs: pkgs.buildGo121Module {
+      app = { system, pkgs }: gomod2nix.legacyPackages.${system}.buildGoApplication {
         name = "example-go-project";
-        src = gitignore.lib.gitignoreSource ./.;
-        # Use vendored dependencies for this build.
-        vendorSha256 = null;
+        pwd = ./.;
+        src = ./.;
+        modules = ./gomod2nix.toml;
       };
 
       # Docker user.
@@ -51,7 +52,7 @@
         echo "user:!:1::::::" > $out/etc/shadow
       '';
       # Docker app.
-      dockerImageApp = pkgs: pkgs.dockerTools.buildImage {
+      dockerImageApp = { pkgs, system }: pkgs.dockerTools.buildImage {
         name = "example-go-project";
         tag = "latest";
 
@@ -61,7 +62,7 @@
           # pkgs.coreutils
           # pkgs.bash
           (dockerUser pkgs)
-          (app pkgs)
+          (app { system = system; pkgs = pkgs; })
         ];
         config = {
           Cmd = [ "example-go-project" ];
@@ -87,8 +88,8 @@
     in
     {
       packages = forAllSystems ({ system, pkgs }: {
-        default = app pkgs;
-        dockerImageApp = dockerImageApp pkgs;
+        default = app { system = system; pkgs = pkgs; };
+        dockerImageApp = dockerImageApp { system = system; pkgs = pkgs; };
         dockerImageTools = dockerImageTools { system = system; pkgs = pkgs; };
       });
 

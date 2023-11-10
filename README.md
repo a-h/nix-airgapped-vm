@@ -142,5 +142,13 @@ nix run github:tiiuae/sbomnix#sbomnix -- --type both `nix path-info .`
 Dir: example-go-project
 
 ```
-nix run github:tiiuae/sbomnix#nixgraph -- --buildtime --depth=1 `nix path-info .#dockerImageApp`
+nix run github:tiiuae/sbomnix#nixgraph -- --buildtime --depth=3 `nix path-info .`
+```
+
+### gomod2nix-update
+
+Dir: example-go-project
+
+```
+nix run github:nix-community/gomod2nix
 ```
