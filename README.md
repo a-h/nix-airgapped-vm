@@ -10,6 +10,14 @@ Create a new VM. If it already exists, delete it with `multipass delete nix-airg
 multipass launch -n nix-airgapped-vm --disk 10G --cloud-init cloud-init.yaml --verbose
 ```
 
+### add-multipass-vm-dns
+
+```sh
+nix develop --command multipass-hosts -print=true -update=false > hosts
+echo "About to overwrite hosts file..."
+sudo mv hosts /etc/hosts
+```
+
 ### view-startup-logs
 
 You can check the startup logs to check that the commands in cloud-init.yaml were successful.
@@ -38,6 +46,12 @@ cat enable-ssh.sh | multipass exec nix-airgapped-vm -- bash -
 ### ssh
 
 ```sh
+ssh ubuntu@nix-airgapped-vm
+```
+
+### ssh-without-dns
+
+```sh
 export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
 ssh ubuntu@$NIX_AIRGAPPED_VM_IP
 ```
@@ -45,8 +59,7 @@ ssh ubuntu@$NIX_AIRGAPPED_VM_IP
 ### nix-copy-hello
 
 ```sh
-export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
-nix copy --to ssh-ng://ubuntu@$NIX_AIRGAPPED_VM_IP "nixpkgs#hello"
+nix copy --to ssh-ng://ubuntu@nix-airgapped-vm "nixpkgs#hello"
 nix path-info nixpkgs#hello
 ```
 
@@ -55,9 +68,8 @@ nix path-info nixpkgs#hello
 This command starts a shell in the VM with `hello` installed.
 
 ```
-export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
 export NIX_AIRGAPPED_VM_HELLO_LOCATION=`nix path-info nixpkgs#hello`
-ssh ubuntu@$NIX_AIRGAPPED_VM_IP "nix shell $NIX_AIRGAPPED_VM_HELLO_LOCATION"
+ssh ubuntu@nix-airgapped-vm "nix shell $NIX_AIRGAPPED_VM_HELLO_LOCATION"
 ```
 
 ### nix-copy-example-go-project-shell
@@ -67,9 +79,8 @@ The copy operation doesn't check signatures, as per the extra config added durin
 Dir: ./example-go-project
 
 ```
-export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
-nix copy --to ssh-ng://ubuntu@$NIX_AIRGAPPED_VM_IP ".#devShells.x86_64-linux.default"
-nix copy --derivation --to ssh-ng://ubuntu@$NIX_AIRGAPPED_VM_IP ".#devShells.x86_64-linux.default"
+nix copy --to ssh-ng://ubuntu@nix-airgapped-vm ".#devShells.x86_64-linux.default"
+nix copy --derivation --to ssh-ng://ubuntu@nix-airgapped-vm ".#devShells.x86_64-linux.default"
 nix path-info --derivation ".#devShells.x86_64-linux.default"
 ```
 
@@ -80,9 +91,8 @@ This command starts a shell in the VM with `hello` installed.
 Dir: ./example-go-project
 
 ```
-export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
 export NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION=`nix path-info --derivation ".#devShells.x86_64-linux.default"`
-ssh ubuntu@$NIX_AIRGAPPED_VM_IP "nix develop --offline $NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION"
+ssh ubuntu@nix-airgapped-vm "nix develop --offline $NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION"
 ```
 
 ### nix-example-go-project-copy-source
@@ -133,7 +143,7 @@ docker run --rm -it example-go-project:tools-latest
 
 Dir: example-go-project
 
-```
+```sh
 nix run github:tiiuae/sbomnix#sbomnix -- --type both `nix path-info .`
 ```
 
@@ -141,6 +151,12 @@ nix run github:tiiuae/sbomnix#sbomnix -- --type both `nix path-info .`
 
 Dir: example-go-project
 
-```
+```sh
 nix run github:tiiuae/sbomnix#nixgraph -- --buildtime --depth=1 `nix path-info .#dockerImageApp`
+```
+
+### nix-deploy
+
+```sh
+nix develop --command deploy
 ```

@@ -33,12 +33,26 @@
         pkgs = import nixpkgs { inherit system; };
       });
 
+      multipass-hosts = pkgs: pkgs.buildGo121Module {
+        name = "multipass-hosts";
+        # Use my fork until https://github.com/sanderhahn/multipass-hosts/pull/2 is merged.
+        src = pkgs.fetchFromGitHub {
+          owner = "a-h";
+          repo = "multipass-hosts";
+          rev = "readonly_print_flag";
+          hash = "sha256-quGHVK3d0nJnlGvhwhlcgT3z112ivYtyEAyqXP8tm5c=";
+        };
+        # Use vendored dependencies for this build.
+        vendorHash = null;
+      };
+
       # All of the required development tools.
       devTools = { system, pkgs }: [
         xc.packages.${system}.xc
         deploy-rs.packages.${system}.deploy-rs
         # Waiting for https://github.com/NixOS/nixpkgs/pull/268557 to merge.
         # pkgs.multipass
+        (multipass-hosts pkgs)
       ];
 
       config = system-manager.lib.makeSystemConfig
