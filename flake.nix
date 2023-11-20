@@ -78,7 +78,7 @@
 
       deploy.nodes = {
         nix-airgapped-vm = {
-          hostname = "10.162.19.113";
+          hostname = "nix-airgapped-vm";
           sshUser = "ubuntu";
           fastConnection = true; # Prefer my connection to the node, instead of letting it download.
           profiles = {

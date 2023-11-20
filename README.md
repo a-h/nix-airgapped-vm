@@ -160,3 +160,9 @@ nix run github:tiiuae/sbomnix#nixgraph -- --buildtime --depth=1 `nix path-info .
 ```sh
 nix develop --command deploy
 ```
+
+### logs
+
+```sh
+ssh ubuntu@nix-airgapped-vm journalctl -u example-go-project
+```
