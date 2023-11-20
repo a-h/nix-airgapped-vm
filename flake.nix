@@ -9,12 +9,16 @@
       url = "github:serokell/deploy-rs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    system-manager = {
+      url = "github:numtide/system-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     example-go-project = {
       url = "path:./example-go-project";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, nixpkgs, xc, deploy-rs, example-go-project, ... }:
+  outputs = { self, nixpkgs, xc, deploy-rs, system-manager, example-go-project, ... }:
     let
       allSystems = [
         "x86_64-linux" # 64-bit Intel/AMD Linux
@@ -33,13 +37,28 @@
       devTools = { system, pkgs }: [
         xc.packages.${system}.xc
         deploy-rs.packages.${system}.deploy-rs
-        # multipass
+        # Waiting for https://github.com/NixOS/nixpkgs/pull/268557 to merge.
+        # pkgs.multipass
       ];
+
+      config = system-manager.lib.makeSystemConfig
+        {
+          modules = [
+            ./example-go-project-service.nix
+          ];
+          # These arguments are passed to the modules.
+          extraSpecialArgs = {
+            app = example-go-project.packages.x86_64-linux.default;
+          };
+        };
     in
     {
       devShells = forAllSystems ({ system, pkgs }: {
         default = pkgs.mkShell {
-          packages = devTools { system = system; pkgs = pkgs; };
+          packages = devTools {
+            system = system;
+            pkgs = pkgs;
+          };
         };
       });
 
@@ -49,17 +68,8 @@
           sshUser = "ubuntu";
           fastConnection = true; # Prefer my connection to the node, instead of letting it download.
           profiles = {
-            hello = {
-              user = "ubuntu";
-              #path = deploy-rs.lib.x86_64-linux.setActivate nixpkgs.legacyPackages.x86_64-linux.hello "./bin/hello";
-              # A derivation containing your required software, and a script to activate it in `${path}/deploy-rs-activate`
-              # For ease of use, `deploy-rs` provides a function to easily add the required activation script to any derivation
-              # Both the working directory and `$PROFILE` will point to `profilePath`
-              path = deploy-rs.lib.x86_64-linux.activate.custom nixpkgs.legacyPackages.x86_64-linux.hello "./bin/hello";
-            };
             app = {
-              user = "ubuntu";
-              path = deploy-rs.lib.x86_64-linux.activate.custom example-go-project.packages.x86_64-linux.default "./bin/example-go-project";
+              path = deploy-rs.lib.x86_64-linux.activate.custom config "sudo ./bin/activate";
             };
           };
         };
@@ -68,4 +78,3 @@
       checks = builtins.mapAttrs (system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
     };
 }
-

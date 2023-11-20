@@ -40,7 +40,7 @@
         name = "example-go-project";
         src = gitignore.lib.gitignoreSource ./.;
         # Use vendored dependencies for this build.
-        vendorSha256 = null;
+        vendorHash = null;
       };
 
       # Docker user.
