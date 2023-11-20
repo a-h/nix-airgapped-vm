@@ -9,8 +9,12 @@
       url = "github:serokell/deploy-rs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    example-go-project = {
+      url = "path:./example-go-project";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  outputs = { self, nixpkgs, xc, deploy-rs, ... }:
+  outputs = { self, nixpkgs, xc, deploy-rs, example-go-project, ... }:
     let
       allSystems = [
         "x86_64-linux" # 64-bit Intel/AMD Linux
@@ -43,6 +47,7 @@
         nix-airgapped-vm = {
           hostname = "10.162.19.113";
           sshUser = "ubuntu";
+          fastConnection = true; # Prefer my connection to the node, instead of letting it download.
           profiles = {
             hello = {
               user = "ubuntu";
@@ -51,6 +56,10 @@
               # For ease of use, `deploy-rs` provides a function to easily add the required activation script to any derivation
               # Both the working directory and `$PROFILE` will point to `profilePath`
               path = deploy-rs.lib.x86_64-linux.activate.custom nixpkgs.legacyPackages.x86_64-linux.hello "./bin/hello";
+            };
+            app = {
+              user = "ubuntu";
+              path = deploy-rs.lib.x86_64-linux.activate.custom example-go-project.packages.x86_64-linux.default "./bin/example-go-project";
             };
           };
         };
