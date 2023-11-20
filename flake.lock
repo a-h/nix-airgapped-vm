@@ -75,7 +75,7 @@
       },
       "locked": {
         "lastModified": 1,
-        "narHash": "sha256-aG9TrpPF0L0f7dIZqSrD6Ruja9LuTtLqGva1R/aRfzc=",
+        "narHash": "sha256-qBokHUB+4nwFmXIVYOATREb6aNk05rQzqtKMM0sEW5I=",
         "path": "./example-go-project",
         "type": "path"
       },

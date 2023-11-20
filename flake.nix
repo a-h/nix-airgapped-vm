@@ -76,14 +76,16 @@
         };
       });
 
-      deploy.nodes = {
-        nix-airgapped-vm = {
-          hostname = "nix-airgapped-vm";
-          sshUser = "ubuntu";
-          fastConnection = true; # Prefer my connection to the node, instead of letting it download.
-          profiles = {
-            app = {
-              path = deploy-rs.lib.x86_64-linux.activate.custom config "sudo ./bin/activate";
+      deploy = {
+        nodes = {
+          nix-airgapped-vm = {
+            hostname = "nix-airgapped-vm";
+            sshUser = "ubuntu";
+            fastConnection = true; # Prefer my connection to the node, instead of letting it download.
+            profiles = {
+              system = {
+                path = deploy-rs.lib.x86_64-linux.activate.custom config "sudo ./bin/activate";
+              };
             };
           };
         };

@@ -161,6 +161,12 @@ nix run github:tiiuae/sbomnix#nixgraph -- --buildtime --depth=1 `nix path-info .
 nix develop --command deploy
 ```
 
+### nix-update-flake-lock
+
+```sh
+nix flake lock --update-input example-go-project
+```
+
 ### logs
 
 ```sh
