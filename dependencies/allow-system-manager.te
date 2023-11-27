@@ -1,0 +1,31 @@
+module allow-system-manager 1.0;
+
+require {
+        type default_t;
+        type tmpfs_t;
+        type ifconfig_t;
+        type init_t;
+        class cap_userns net_admin;
+        class lnk_file read;
+        class file { execute execute_no_trans map open read };
+}
+
+#============= ifconfig_t ==============
+
+#!!!! This avc is allowed in the current policy
+allow ifconfig_t self:cap_userns net_admin;
+
+#!!!! This avc is allowed in the current policy
+allow ifconfig_t tmpfs_t:lnk_file read;
+
+#============= init_t ==============
+
+#!!!! This avc can be allowed using the boolean 'domain_can_mmap_files'
+allow init_t default_t:file map;
+
+#!!!! This avc is allowed in the current policy
+allow init_t default_t:file { execute execute_no_trans open read };
+
+#!!!! This avc is allowed in the current policy
+allow init_t default_t:lnk_file read;
+

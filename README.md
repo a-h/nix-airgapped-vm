@@ -2,28 +2,25 @@
 
 ## Tasks
 
-### create-multipass-vm
+### create-lima-vm
 
-Create a new VM. If it already exists, delete it with `multipass delete nix-airgapped-vm`, then `multipass purge`
+See docs at https://lima-vm.io/docs/reference/limactl_create/
 
-```sh
-multipass launch -n nix-airgapped-vm --disk 10G --cloud-init cloud-init.yaml --verbose
+If the VM exists, you will need to delete it with `stop` and `delete` commands.
+
+```bash
+limactl stop nix-airgapped-vm --tty=false || true
+limactl delete nix-airgapped-vm --tty=false || true
+limactl create --name=nix-airgapped-vm --memory=2 --cpus=1 --tty=false template://rocky-8
+limactl start nix-airgapped-vm --tty=false
 ```
 
-### add-multipass-vm-dns
+### disable-lima-vm-outbound-traffic
 
-```sh
-nix develop --command multipass-hosts -print=true -update=false > hosts
-echo "About to overwrite hosts file..."
-sudo mv hosts /etc/hosts
-```
-
-### view-startup-logs
-
-You can check the startup logs to check that the commands in cloud-init.yaml were successful.
-
-```sh
-multipass exec nix-airgapped-vm -- sudo cat /var/log/cloud-init-output.log
+```bash
+limactl shell nix-airgapped-vm sudo dnf install firewalld -y
+limactl shell nix-airgapped-vm sudo bash -c 'systemctl enable --now firewalld'
+limactl shell nix-airgapped-vm sudo iptables -t filter -I OUTPUT 1 -m state --state NEW -j DROP
 ```
 
 ### install-nix
@@ -32,44 +29,28 @@ The installer comes from https://github.com/DeterminateSystems/nix-installer/rel
 
 The binary comes from https://releases.nixos.org/nix/nix-2.18.1/nix-2.18.1-x86_64-linux.tar.xz
 
-```sh
-multipass transfer --recursive ./dependencies nix-airgapped-vm:.
-cat install-nix.sh | multipass exec nix-airgapped-vm -- bash -
-```
-
-### enable-ssh
-
-```sh
-cat enable-ssh.sh | multipass exec nix-airgapped-vm -- bash -
+```bash
+limactl copy ./dependencies nix-airgapped-vm: --recursive
+cat install-nix.sh | limactl shell nix-airgapped-vm
+# Setup SELinux policy to enable system-manager.
+cat setup-selinux.sh | limactl shell nix-airgapped-vm
 ```
 
 ### ssh
 
-```sh
-ssh ubuntu@nix-airgapped-vm
-```
-
-### ssh-without-dns
-
-```sh
-export NIX_AIRGAPPED_VM_IP=`multipass info nix-airgapped-vm --format json | jq -r '.info["nix-airgapped-vm"]["ipv4"][0]'`
-ssh ubuntu@$NIX_AIRGAPPED_VM_IP
+```bash
+ssh -F $HOME/.lima/nix-airgapped-vm/ssh.config lima-nix-airgapped-vm
 ```
 
 ### nix-copy-hello
 
-```sh
-nix copy --to ssh-ng://ubuntu@nix-airgapped-vm "nixpkgs#hello"
-nix path-info nixpkgs#hello
-```
+Copies `hello` from the nixpkgs to the remote machine, and installs it in the default profile.
 
-### nix-run-hello-shell
-
-This command starts a shell in the VM with `hello` installed.
-
-```
+```bash
+export NIX_SSHOPTS="-F $HOME/.lima/nix-airgapped-vm/ssh.config" 
+nix copy --to ssh-ng://lima-nix-airgapped-vm "nixpkgs#hello"
 export NIX_AIRGAPPED_VM_HELLO_LOCATION=`nix path-info nixpkgs#hello`
-ssh ubuntu@nix-airgapped-vm "nix shell $NIX_AIRGAPPED_VM_HELLO_LOCATION"
+limactl shell nix-airgapped-vm nix profile install $NIX_AIRGAPPED_VM_HELLO_LOCATION
 ```
 
 ### nix-copy-example-go-project-shell
@@ -78,9 +59,10 @@ The copy operation doesn't check signatures, as per the extra config added durin
 
 Dir: ./example-go-project
 
-```
-nix copy --to ssh-ng://ubuntu@nix-airgapped-vm ".#devShells.x86_64-linux.default"
-nix copy --derivation --to ssh-ng://ubuntu@nix-airgapped-vm ".#devShells.x86_64-linux.default"
+```bash
+export NIX_SSHOPTS="-F $HOME/.lima/nix-airgapped-vm/ssh.config" 
+nix copy --to ssh-ng://lima-nix-airgapped-vm ".#devShells.x86_64-linux.default"
+nix copy --derivation --to ssh-ng://lima-nix-airgapped-vm ".#devShells.x86_64-linux.default"
 nix path-info --derivation ".#devShells.x86_64-linux.default"
 ```
 
@@ -90,15 +72,15 @@ This command starts a shell in the VM with `hello` installed.
 
 Dir: ./example-go-project
 
-```
+```bash
 export NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION=`nix path-info --derivation ".#devShells.x86_64-linux.default"`
-ssh ubuntu@nix-airgapped-vm "nix develop --offline $NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION"
+limactl shell nix-airgapped-vm nix develop --offline $NIX_AIRGAPPED_VM_EXAMPLE_GO_PROJECT_LOCATION
 ```
 
 ### nix-example-go-project-copy-source
 
-```
-multipass transfer --recursive ./example-go-project nix-airgapped-vm:.
+```bash
+limactl copy ./example-go-project nix-airgapped-vm: --recursive
 ```
 
 ### nix-build-docker-app
@@ -107,7 +89,7 @@ Build the Docker app image using Nix and import it to the local Docker daemon.
 
 Dir: example-go-project
 
-```sh
+```bash
 nix build .#dockerImageApp
 docker load < result
 ```
@@ -118,7 +100,7 @@ Build the Docker tools image using Nix and import it to the local Docker daemon.
 
 Dir: example-go-project
 
-```sh
+```bash
 nix build .#dockerImageTools
 docker load < result
 ```
@@ -127,7 +109,7 @@ docker load < result
 
 Run the Docker image created by `nix-build-docker-app`.
 
-```sh
+```bash
 docker run --rm -it example-go-project:latest
 ```
 
@@ -135,7 +117,7 @@ docker run --rm -it example-go-project:latest
 
 Run the Docker image created by `nix-build-docker-tools`.
 
-```sh
+```bash
 docker run --rm -it example-go-project:tools-latest
 ```
 
@@ -143,7 +125,7 @@ docker run --rm -it example-go-project:tools-latest
 
 Dir: example-go-project
 
-```sh
+```bash
 nix run github:tiiuae/sbomnix#sbomnix -- --type both `nix path-info .`
 ```
 
@@ -151,24 +133,24 @@ nix run github:tiiuae/sbomnix#sbomnix -- --type both `nix path-info .`
 
 Dir: example-go-project
 
-```sh
+```bash
 nix run github:tiiuae/sbomnix#nixgraph -- --buildtime --depth=1 `nix path-info .#dockerImageApp`
 ```
 
 ### nix-deploy
 
-```sh
+```bash
 nix develop --command deploy
 ```
 
 ### nix-update-flake-lock
 
-```sh
+```bash
 nix flake lock --update-input example-go-project
 ```
 
 ### logs
 
-```sh
-ssh ubuntu@nix-airgapped-vm journalctl -u example-go-project
+```bash
+limactl shell nix-airgapped-vm sudo journalctl -u example-go-project
 ```

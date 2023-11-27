@@ -33,26 +33,11 @@
         pkgs = import nixpkgs { inherit system; };
       });
 
-      multipass-hosts = pkgs: pkgs.buildGo121Module {
-        name = "multipass-hosts";
-        # Use my fork until https://github.com/sanderhahn/multipass-hosts/pull/2 is merged.
-        src = pkgs.fetchFromGitHub {
-          owner = "a-h";
-          repo = "multipass-hosts";
-          rev = "readonly_print_flag";
-          hash = "sha256-quGHVK3d0nJnlGvhwhlcgT3z112ivYtyEAyqXP8tm5c=";
-        };
-        # Use vendored dependencies for this build.
-        vendorHash = null;
-      };
-
       # All of the required development tools.
       devTools = { system, pkgs }: [
         xc.packages.${system}.xc
         deploy-rs.packages.${system}.deploy-rs
-        # Waiting for https://github.com/NixOS/nixpkgs/pull/268557 to merge.
-        # pkgs.multipass
-        (multipass-hosts pkgs)
+        pkgs.lima
       ];
 
       config = system-manager.lib.makeSystemConfig
@@ -79,8 +64,9 @@
       deploy = {
         nodes = {
           nix-airgapped-vm = {
-            hostname = "nix-airgapped-vm";
-            sshUser = "ubuntu";
+            hostname = "lima-nix-airgapped-vm";
+            sshUser = "adrian-hesketh";
+            sshOpts = [ "-F" "/home/adrian-hesketh/.lima/nix-airgapped-vm/ssh.config" ];
             fastConnection = true; # Prefer my connection to the node, instead of letting it download.
             profiles = {
               system = {

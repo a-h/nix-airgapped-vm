@@ -7,9 +7,11 @@ import (
 	"os"
 )
 
+var log *slog.Logger
+
 func main() {
 	addr := ":8080"
-	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	log = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	log.Info("Starting", slog.String("addr", addr))
 
 	var h Handler
@@ -21,5 +23,6 @@ func main() {
 type Handler struct{}
 
 func (Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.Info("Handling request")
 	io.WriteString(w, "Hello, World")
 }
